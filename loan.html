@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>대출 레버리지 배당 계산기 - 대출로 ETF 투자 시뮬레이션</title>
+<meta name="description" content="대출을 활용한 배당 ETF 투자 시뮬레이션. 대출 상환 계산기(원리금균등·원금균등·만기일시)와 레버리지 배당 투자 수익 분석을 한번에 확인하세요.">
+<meta name="keywords" content="대출 계산기, 레버리지 배당, 대출 배당 투자, 원리금균등, 원금균등, 만기일시, ETF 대출 투자">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="대출 레버리지 배당 계산기">
+<meta property="og:description" content="대출 상환 계산 + 배당 ETF 레버리지 투자 시뮬레이션">
+<meta property="og:type" content="website">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;background:#fff;color:#111;padding:16px;max-width:1100px;margin:0 auto}
+h1{font-size:19px;font-weight:700;margin-bottom:4px}
+.subtitle{font-size:13px;color:#333;margin-bottom:16px}
+.main-tabs{display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap}
+.main-tab{padding:9px 22px;border:1.5px solid #ccc;border-radius:8px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;color:#333}
+.main-tab.active{background:#111;color:#fff;border-color:#111}
+.main-panel{display:none}
+.main-panel.active{display:block}
+.desktop-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.ptitle{font-size:15px;font-weight:700;color:#000;margin-bottom:12px;padding-bottom:8px;border-bottom:1.5px solid #ddd}
+.lbl{font-size:14px;color:#333;font-weight:600;margin-bottom:4px}
+input,select{width:100%;padding:8px 11px;border:1.5px solid #bbb;border-radius:8px;font-size:16px;font-weight:500;background:#fff;color:#111;margin-bottom:10px}
+input::placeholder{font-size:12px;color:#999;font-weight:400}
+input:focus,select:focus{outline:none;border-color:#555}
+.fq{padding:5px 12px;border:1.5px solid #ccc;border-radius:20px;background:#fff;cursor:pointer;font-size:13px;font-weight:500;color:#333}
+.fq.active{background:#111;color:#fff;border-color:#111}
+.freq-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:.875rem}
+.mc{background:#f4f4f4;border-radius:8px;padding:9px 11px;border:1px solid #e4e4e4}
+.mc .ml{font-size:13px;color:#333;font-weight:500;margin-bottom:3px}
+.mc .mv{font-size:16px;font-weight:600;color:#444}
+.mc .mv.g{color:#1D9E75}.mc .mv.r{color:#D85A30}.mc .mv.b{color:#2563EB}.mc .mv.p{color:#7C3AED}
+.sim-wrap{max-height:320px;overflow-y:auto;border:1px solid #eee;border-radius:8px;margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-weight:700;color:#222;padding:6px 8px;border-bottom:2px solid #ddd;white-space:nowrap;background:#f9f9f9;position:sticky;top:0;z-index:1}
+td{padding:5px 8px;border-bottom:1px solid #eee;color:#111;font-weight:500;white-space:nowrap}
+td:last-child,th:last-child{text-align:right}
+.pdfbtn{display:flex;align-items:center;gap:6px;padding:10px 18px;background:#111;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:1.25rem;margin-left:auto}
+.pdfbtn:hover{background:#333}
+.clear-btn{padding:6px 14px;background:transparent;border:1.5px solid #ddd;border-radius:8px;font-size:13px;font-weight:500;color:#444;cursor:pointer}
+.clear-btn:hover{border-color:#D85A30;color:#D85A30}
+.save-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
+.save-toast.show{opacity:1}
+.warn-box{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;font-size:12px;line-height:1.8;margin-bottom:14px;color:#444}
+.info-box{background:#f0f4ff;border:1px solid #c7d7fd;border-radius:8px;padding:10px 14px;font-size:12px;line-height:1.8;margin-bottom:14px;color:#444}
+.good-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;font-size:12px;line-height:1.8;margin-bottom:8px}
+.bad-box{background:#fff1f2;border:1px solid #fecdd3;border-radius:8px;padding:10px 14px;font-size:12px;line-height:1.8;margin-bottom:8px}
+.section-title{font-size:14px;font-weight:700;color:#222;margin:16px 0 8px;padding-bottom:5px;border-bottom:1.5px solid #eee}
+.home-link{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:#555;text-decoration:none;margin-bottom:14px;padding:5px 12px;border:1.5px solid #ddd;border-radius:8px}
+.home-link:hover{border-color:#555}
+/* 레버리지 시뮬 연도별 테이블 */
+.lev-sum{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:12px}
+@media(max-width:640px){
+  .desktop-grid{display:block}
+  .rgrid{grid-template-columns:1fr 1fr}
+  .lev-sum{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px">
+  <h1>🏦 대출 레버리지 배당 계산기</h1>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="clear-btn" onclick="clearTab()">🗑️ 초기화</button>
+  </div>
+</div>
+<p class="subtitle">대출 상환 계산 · 레버리지 배당 ETF 투자 시뮬레이션 &nbsp;<button onclick="fillExample()" style="font-size:12px;padding:3px 10px;border:1.5px solid #bbb;border-radius:6px;background:#f9f9f9;cursor:pointer;color:#555;font-weight:600">✏️ 예시값 채우기</button></p>
+
+<div class="main-tabs">
+  <button class="main-tab active" onclick="switchMain('loan')">💳 대출 계산기</button>
+  <button class="main-tab" onclick="switchMain('lev')">📈 레버리지 배당 시뮬레이터</button>
+</div>
+<a href="index.html" style="display:flex;align-items:center;gap:8px;background:#f0f4ff;border:1.5px solid #c7d7fd;border-radius:10px;padding:10px 14px;margin-bottom:16px;text-decoration:none;color:#1e3a8a;font-size:13px;font-weight:600">📊 배당 계산기로 돌아가기 → <span style="font-size:12px;font-weight:400;color:#555">국내·미국 배당금 계산 · 세금 · 목표 역산</span></a>
+
+<!-- 대출 계산기 -->
+<div id="main-loan" class="main-panel active">
+  <div class="desktop-grid">
+    <!-- 입력 -->
+    <div>
+      <div class="ptitle">입력</div>
+      <div class="lbl">대출 금액 (만원)</div>
+      <input type="text" inputmode="decimal" id="l-amount" placeholder="예) 5,000 (5천만원)" oninput="calcLoan()">
+      <div class="lbl">연 이자율 (%)</div>
+      <input type="text" inputmode="decimal" id="l-rate" placeholder="예) 4.5" oninput="calcLoan()">
+      <div class="lbl">대출 기간</div>
+      <div class="freq-row" style="flex-wrap:wrap;gap:5px;margin-bottom:6px">
+        <button class="fq" onclick="setLoanPeriodPreset(5)">5년</button>
+        <button class="fq" onclick="setLoanPeriodPreset(10)">10년</button>
+        <button class="fq" onclick="setLoanPeriodPreset(15)">15년</button>
+        <button class="fq" onclick="setLoanPeriodPreset(20)">20년</button>
+        <button class="fq" onclick="setLoanPeriodPreset(25)">25년</button>
+        <button class="fq" onclick="setLoanPeriodPreset(30)">30년</button>
+        <button class="fq" onclick="setLoanPeriodPreset(35)">35년</button>
+        <button class="fq" onclick="setLoanPeriodPreset(40)">40년</button>
+      </div>
+      <div class="freq-row">
+        <button class="fq active" id="l-unit-year" onclick="setLoanPeriodUnit('year',this)">년 직접입력</button>
+        <button class="fq" id="l-unit-month" onclick="setLoanPeriodUnit('month',this)">개월 직접입력</button>
+      </div>
+      <input type="text" inputmode="decimal" id="l-period" placeholder="예) 10 (10년)" oninput="calcLoan()">
+      <div class="lbl">상환 방법</div>
+      <div class="freq-row">
+        <button class="fq active" onclick="setLoanType('equal-payment',this)">원리금균등</button>
+        <button class="fq" onclick="setLoanType('equal-principal',this)">원금균등</button>
+        <button class="fq" onclick="setLoanType('bullet',this)">만기일시</button>
+      </div>
+      <div class="info-box" id="loan-type-desc">
+        📌 <strong>원리금균등</strong> — 매월 동일한 금액을 납부해요. 초반엔 이자 비중이 높고 후반엔 원금 비중이 높아져요.
+      </div>
+    </div>
+    <!-- 결과 -->
+    <div>
+      <div class="ptitle">계산 결과</div>
+      <div class="rgrid">
+        <div class="mc"><div class="ml">월 납부액 (첫달)</div><div class="mv b" id="l-monthly">—</div></div>
+        <div class="mc"><div class="ml" id="l-monthly2-lbl">월 납부액 (마지막달)</div><div class="mv" id="l-monthly2">—</div></div>
+        <div class="mc"><div class="ml">총 납부액</div><div class="mv r" id="l-total">—</div></div>
+        <div class="mc"><div class="ml">총 이자</div><div class="mv r" id="l-interest">—</div></div>
+        <div class="mc"><div class="ml">대출 원금</div><div class="mv" id="l-principal">—</div></div>
+        <div class="mc"><div class="ml">이자 비율</div><div class="mv r" id="l-interest-ratio">—</div></div>
+      </div>
+      <div class="section-title">📋 월별 상환 내역 (스크롤)</div>
+      <div class="sim-wrap">
+        <table id="l-table">
+          <thead><tr><th>회차</th><th>납부액</th><th>원금</th><th>이자</th><th>잔여원금</th></tr></thead>
+          <tbody id="l-tbody"><tr class="emp"><td colspan="5">위에 값을 입력하면 상환 내역이 나와요</td></tr></tbody>
+        </table>
+      </div>
+      <button class="pdfbtn" onclick="loanPDF()"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 15h8v1H8v-1zm0-3h8v1H8v-1zm0 6h5v1H8v-1z"/></svg> PDF로 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 레버리지 배당 시뮬레이터 -->
+<div id="main-lev" class="main-panel">
+  <div class="warn-box">
+    ⚠️ <strong>이론상 시뮬레이션입니다.</strong> 실제 투자는 주가 변동·배당 삭감·금리 변동 등 다양한 리스크가 있어요. 참고용으로만 활용하세요.
+  </div>
+  <div class="desktop-grid">
+    <!-- 입력 -->
+    <div>
+      <div class="ptitle">대출 조건</div>
+      <div class="lbl">대출 금액 (만원)</div>
+      <input type="text" inputmode="decimal" id="v-amount" placeholder="예) 5,000" oninput="calcLev()">
+      <div class="lbl">연 이자율 (%)</div>
+      <input type="text" inputmode="decimal" id="v-rate" placeholder="예) 4.5" oninput="calcLev()">
+      <div class="lbl">대출 기간</div>
+      <div class="freq-row" style="flex-wrap:wrap;gap:5px;margin-bottom:6px">
+        <button class="fq" onclick="setLevPeriodPreset(5)">5년</button>
+        <button class="fq" onclick="setLevPeriodPreset(10)">10년</button>
+        <button class="fq" onclick="setLevPeriodPreset(15)">15년</button>
+        <button class="fq" onclick="setLevPeriodPreset(20)">20년</button>
+        <button class="fq" onclick="setLevPeriodPreset(25)">25년</button>
+        <button class="fq" onclick="setLevPeriodPreset(30)">30년</button>
+      </div>
+      <input type="text" inputmode="decimal" id="v-period" placeholder="예) 10 (년 직접입력)" oninput="calcLev()">
+      <div class="lbl">상환 방법</div>
+      <div class="freq-row">
+        <button class="fq active" onclick="setLevType('equal-payment',this)">원리금균등</button>
+        <button class="fq" onclick="setLevType('equal-principal',this)">원금균등</button>
+        <button class="fq" onclick="setLevType('bullet',this)">만기일시</button>
+      </div>
+
+      <div class="ptitle" style="margin-top:16px">배당 ETF 조건</div>
+      <div class="lbl">연 배당수익률 (%)</div>
+      <input type="text" inputmode="decimal" id="v-yield" placeholder="예) 8 (연 8%)" oninput="calcLev()">
+      <div class="lbl">배당 지급 주기</div>
+      <div class="freq-row">
+        <button class="fq" onclick="setLevFreq('w',this)">주</button>
+        <button class="fq active" onclick="setLevFreq('m',this)">월</button>
+        <button class="fq" onclick="setLevFreq('q',this)">분기</button>
+        <button class="fq" onclick="setLevFreq('y',this)">연</button>
+      </div>
+      <div class="lbl">연 배당 성장률 (%) <span style="font-size:11px;color:#888;font-weight:400">선택 · 기본 3%</span></div>
+      <input type="text" inputmode="decimal" id="v-growth" placeholder="예) 3 (매년 3% 배당 증가)" oninput="calcLev()">
+      <div class="lbl">연 주가 성장률 (%) <span style="font-size:11px;color:#888;font-weight:400">선택 · 기본 3%</span></div>
+      <input type="text" inputmode="decimal" id="v-stock-growth" placeholder="예) 3 (매년 3% 주가 상승)" oninput="calcLev()">
+      <div class="lbl">배당 재투자 여부</div>
+      <div class="freq-row">
+        <button class="fq active" onclick="setLevReinvest(false,this)">재투자 안함</button>
+        <button class="fq" onclick="setLevReinvest(true,this)">배당 재투자</button>
+      </div>
+    </div>
+    <!-- 결과 -->
+    <div>
+      <div class="ptitle">시뮬레이션 결과</div>
+      <div class="lev-sum">
+        <div class="mc"><div class="ml">월 대출 상환액</div><div class="mv r" id="v-monthly-pay">—</div></div>
+        <div class="mc"><div class="ml">1년차 월 배당수령액</div><div class="mv g" id="v-monthly-div">—</div></div>
+        <div class="mc"><div class="ml">총 대출 이자</div><div class="mv r" id="v-total-int">—</div></div>
+        <div class="mc"><div class="ml">총 배당 수령액</div><div class="mv g" id="v-total-div">—</div></div>
+        <div class="mc"><div class="ml">손익분기 시점 <span style="font-size:11px;color:#888;font-weight:400">누적배당≥총이자</span></div><div class="mv b" id="v-breakeven">—</div></div>
+        <div class="mc"><div class="ml">만기 후 순수익 <span style="font-size:11px;color:#888;font-weight:400">총배당-총이자</span></div><div class="mv p" id="v-net">—</div></div>
+      </div>
+      <!-- 유불리 판단 -->
+      <div id="v-judge" style="display:none"></div>
+
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>📋 상세 내역 (스크롤)</span>
+        <div style="display:flex;gap:5px">
+          <button class="fq active" id="v-view-year" onclick="setLevView('year')">연별</button>
+          <button class="fq" id="v-view-month" onclick="setLevView('month')">월별</button>
+        </div>
+      </div>
+      <div class="sim-wrap">
+        <table id="v-table">
+          <thead id="v-thead"><tr><th>연도</th><th>연간상환(이자)</th><th>연간배당</th><th>배당-상환액</th><th>잔여대출</th><th>누적배당</th><th>평가자산</th></tr></thead>
+          <tbody id="v-tbody"><tr class="emp"><td colspan="7">위에 값을 입력하면 시뮬레이션 결과가 나와요</td></tr></tbody>
+        </table>
+      </div>
+      <button class="pdfbtn" onclick="levPDF()"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 15h8v1H8v-1zm0 6h5v1H8v-1z"/></svg> PDF로 저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="save-toast" id="save-toast">💾 입력값이 저장됐어요</div>
+
+<!-- 하단 SEO -->
+<div style="margin-top:2rem;padding:16px 18px;background:#f9f9f9;border-radius:12px;font-size:12px;color:#666;line-height:1.9">
+  <strong style="color:#333">🏦 대출 레버리지 배당 계산기 소개</strong><br>
+  대출을 활용해 배당 ETF에 투자할 때 예상 수익과 비용을 계산해드려요. 원리금균등·원금균등·만기일시 3가지 상환 방법별 월별 납부 내역과 총 이자를 확인하고, 배당수익률·성장률·재투자 여부에 따른 레버리지 투자 시뮬레이션을 이론상으로 분석해드려요. KODEX 고배당, RISE 200위클리커버, JEPI, SCHD 등 배당 ETF 투자 시 참고용으로 활용하세요.
+</div>
+
+<script>
+var loanType='equal-payment';
+var loanPeriodUnit='year';
+var levType='equal-payment';
+var levFreq='m';
+var levReinvest=false;
+var levView='year';
+var levRows=[];var levMonthRows=[];
+var saveTimer=null;
+
+function f(n){return Math.round(n).toLocaleString('ko-KR');}
+function gv(id){var e=document.getElementById(id);if(!e)return 0;var v=e.value.replace(/,/g,'');return parseFloat(v)||0;}
+function sv(id,val){var e=document.getElementById(id);if(e)e.value=val?String(val).replace(/\B(?=(\d{3})+(?!\d))/g,','):'';}
+function fmt(v){return v.replace(/[^0-9.]/g,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+['l-amount','l-rate','l-period','v-amount','v-rate','v-period','v-yield','v-growth','v-stock-growth'].forEach(function(id){
+  var e=document.getElementById(id);
+  if(e)e.addEventListener('input',function(){this.value=fmt(this.value);});
+});
+
+function setLoanPeriodPreset(yr){
+  loanPeriodUnit='year';
+  document.getElementById('l-unit-year').classList.add('active');
+  document.getElementById('l-unit-month').classList.remove('active');
+  document.getElementById('l-period').value=yr;
+  document.getElementById('l-period').placeholder='예) 10 (10년)';
+  calcLoan();
+}
+function setLevPeriodPreset(yr){
+  document.getElementById('v-period').value=yr;
+  calcLev();
+}
+function setLevView(v){
+  levView=v;
+  document.getElementById('v-view-year').classList.toggle('active',v==='year');
+  document.getElementById('v-view-month').classList.toggle('active',v==='month');
+  renderLevTable();
+}
+function renderLevTable(){
+  var tb=document.getElementById('v-tbody');
+  var thead=document.getElementById('v-thead');
+  tb.innerHTML='';
+  if(levView==='year'){
+    thead.innerHTML='<tr><th>연도</th><th>연간상환(이자)</th><th>연간배당</th><th>배당-상환액</th><th>잔여대출</th><th>누적배당</th><th>평가자산</th></tr>';
+    levRows.forEach(function(r){
+      var tr=document.createElement('tr');
+      var diffColor=r.diff>=0?'color:#1D9E75':'color:#D85A30';
+      tr.innerHTML='<td>'+r.yr+'년</td><td>'+f(r.pay)+'</td><td>'+f(r.div)+'</td><td style="'+diffColor+';font-weight:700">'+(r.diff>=0?'+':'')+f(r.diff)+'</td><td>'+f(r.bal)+'</td><td>'+f(r.cumDiv)+'</td><td>'+f(r.asset)+'</td>';
+      tb.appendChild(tr);
+    });
+  } else {
+    thead.innerHTML='<tr><th>월</th><th>월상환(이자)</th><th>월배당</th><th>배당-상환액</th><th>잔여대출</th><th>누적배당</th></tr>';
+    levMonthRows.forEach(function(r){
+      var tr=document.createElement('tr');
+      var diffColor=r.diff>=0?'color:#1D9E75':'color:#D85A30';
+      tr.innerHTML='<td>'+r.label+'</td><td>'+f(r.pay)+'</td><td>'+f(r.div)+'</td><td style="'+diffColor+';font-weight:700">'+(r.diff>=0?'+':'')+f(r.diff)+'</td><td>'+f(r.bal)+'</td><td>'+f(r.cumDiv)+'</td>';
+      tb.appendChild(tr);
+    });
+  }
+  if(!levRows.length)tb.innerHTML='<tr class="emp"><td colspan="7">위에 값을 입력하면 시뮬레이션 결과가 나와요</td></tr>';
+}
+
+function switchMain(t){
+  ['loan','lev'].forEach(function(id){document.getElementById('main-'+id).classList.toggle('active',id===t);});
+  document.querySelectorAll('.main-tab').forEach(function(b,i){b.classList.toggle('active',i===(t==='loan'?0:1));});
+}
+
+function setLoanPeriodUnit(u,btn){
+  loanPeriodUnit=u;
+  document.querySelectorAll('.freq-row .fq').forEach(function(b){if(b.onclick.toString().includes('setLoanPeriodUnit'))b.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('l-period').placeholder=u==='year'?'예) 10 (10년)':'예) 120 (120개월)';
+  calcLoan();
+}
+function setLoanType(t,btn){
+  loanType=t;
+  document.querySelectorAll('.freq-row .fq').forEach(function(b){if(b.onclick&&b.onclick.toString().includes('setLoanType'))b.classList.remove('active');});
+  btn.classList.add('active');
+  var desc={
+    'equal-payment':'📌 <strong>원리금균등</strong> — 매월 동일한 금액을 납부해요. 초반엔 이자 비중이 높고 후반엔 원금 비중이 높아져요.',
+    'equal-principal':'📌 <strong>원금균등</strong> — 매월 원금은 동일하게 내고 이자는 줄어들어요. 초반 납부액이 크지만 총 이자가 적어요.',
+    'bullet':'📌 <strong>만기일시</strong> — 매월 이자만 납부하고 만기에 원금을 한번에 상환해요. 월 부담은 적지만 총 이자가 가장 많아요.'
+  };
+  document.getElementById('loan-type-desc').innerHTML=desc[t];
+  calcLoan();
+}
+function setLevType(t,btn){
+  levType=t;
+  document.querySelectorAll('.freq-row .fq').forEach(function(b){if(b.onclick&&b.onclick.toString().includes('setLevType'))b.classList.remove('active');});
+  btn.classList.add('active');
+  calcLev();
+}
+function setLevFreq(f,btn){
+  levFreq=f;
+  document.querySelectorAll('.freq-row .fq').forEach(function(b){if(b.onclick&&b.onclick.toString().includes('setLevFreq'))b.classList.remove('active');});
+  btn.classList.add('active');
+  calcLev();
+}
+function setLevReinvest(v,btn){
+  levReinvest=v;
+  document.querySelectorAll('.freq-row .fq').forEach(function(b){if(b.onclick&&b.onclick.toString().includes('setLevReinvest'))b.classList.remove('active');});
+  btn.classList.add('active');
+  calcLev();
+}
+
+// 대출 계산
+function calcLoan(){
+  var amt=gv('l-amount')*10000;
+  var rate=gv('l-rate')/100/12;
+  var months=loanPeriodUnit==='year'?gv('l-period')*12:gv('l-period');
+  if(!amt||!months){document.getElementById('l-tbody').innerHTML='<tr class="emp"><td colspan="5">값을 입력해주세요</td></tr>';return;}
+
+  var rows=[];var totalPay=0;var totalInt=0;
+  var firstPay=0;var lastPay=0;
+
+  if(loanType==='equal-payment'){
+    // 원리금균등
+    var monthly=rate>0?amt*rate*Math.pow(1+rate,months)/(Math.pow(1+rate,months)-1):amt/months;
+    firstPay=monthly;lastPay=monthly;
+    var bal=amt;
+    for(var i=1;i<=months;i++){
+      var intPart=bal*rate;
+      var prinPart=monthly-intPart;
+      bal-=prinPart;if(bal<0)bal=0;
+      totalPay+=monthly;totalInt+=intPart;
+      rows.push([i,monthly,prinPart,intPart,bal]);
+    }
+    document.getElementById('l-monthly2-lbl').textContent='월 납부액 (동일)';
+    document.getElementById('l-monthly2').textContent=f(monthly)+'원';
+  } else if(loanType==='equal-principal'){
+    // 원금균등
+    var prinPerMonth=amt/months;
+    var bal=amt;
+    for(var i=1;i<=months;i++){
+      var intPart=bal*rate;
+      var payment=prinPerMonth+intPart;
+      bal-=prinPerMonth;if(bal<0)bal=0;
+      if(i===1)firstPay=payment;
+      if(i===months)lastPay=prinPerMonth+bal*rate;
+      totalPay+=payment;totalInt+=intPart;
+      rows.push([i,payment,prinPerMonth,intPart,bal]);
+    }
+    document.getElementById('l-monthly2-lbl').textContent='월 납부액 (마지막달)';
+    document.getElementById('l-monthly2').textContent=f(rows[rows.length-1][1])+'원';
+  } else {
+    // 만기일시
+    var monthlyInt=rate>0?amt*rate:0;
+    firstPay=monthlyInt;lastPay=amt+monthlyInt;
+    for(var i=1;i<=months;i++){
+      var payment=i===months?amt+monthlyInt:monthlyInt;
+      totalPay+=payment;totalInt+=monthlyInt;
+      rows.push([i,payment,i===months?amt:0,monthlyInt,i===months?0:amt]);
+    }
+    document.getElementById('l-monthly2-lbl').textContent='월 납부액 (만기월)';
+    document.getElementById('l-monthly2').textContent=f(lastPay)+'원';
+  }
+
+  document.getElementById('l-monthly').textContent=f(firstPay)+'원';
+  document.getElementById('l-total').textContent=f(totalPay)+'원';
+  document.getElementById('l-interest').textContent=f(totalInt)+'원';
+  document.getElementById('l-principal').textContent=f(amt)+'원';
+  document.getElementById('l-interest-ratio').textContent=(totalInt/amt*100).toFixed(1)+'%';
+
+  var tb=document.getElementById('l-tbody');
+  tb.innerHTML='';
+  rows.forEach(function(r){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+r[0]+'회</td><td>'+f(r[1])+'</td><td>'+f(r[2])+'</td><td>'+f(r[3])+'</td><td>'+f(r[4])+'</td>';
+    tb.appendChild(tr);
+  });
+  toast();
+}
+
+// 레버리지 배당 시뮬레이터
+function calcLev(){
+  var amt=gv('v-amount')*10000;
+  var rate=gv('v-rate')/100;
+  var years=gv('v-period');
+  var divYield=gv('v-yield')/100;
+  var growth=gv('v-growth')/100||0;
+  var stockGrowth=gv('v-stock-growth')/100||0;
+  if(!amt||!years||!divYield){levRows=[];levMonthRows=[];renderLevTable();return;}
+
+  var monthlyRate=rate/12;
+  var months=years*12;
+  var freqMap={w:52,m:12,q:4,y:1};
+  var freqPerYear=freqMap[levFreq];
+  var freqLabel={w:'주',m:'월',q:'분기',y:'연'};
+
+  // 월 상환액 계산
+  var monthlyPay=0;
+  if(levType==='equal-payment'){
+    monthlyPay=monthlyRate>0?amt*monthlyRate*Math.pow(1+monthlyRate,months)/(Math.pow(1+monthlyRate,months)-1):amt/months;
+  } else if(levType==='equal-principal'){
+    monthlyPay=amt/months+(amt*monthlyRate);
+  } else {
+    monthlyPay=amt*monthlyRate;
+  }
+
+  var totalInt=0;var totalDiv=0;
+  var curAmt=amt;var curBal=amt;
+  var breakeven=-1;
+  levRows=[];levMonthRows=[];
+
+  for(var yr=1;yr<=years;yr++){
+    var curDivYield=divYield*Math.pow(1+growth,yr-1);
+    var yearDiv=curAmt*curDivYield;
+    if(levReinvest)curAmt+=yearDiv;
+    totalDiv+=yearDiv;
+
+    var yearInt=0;var yearPay=0;
+    var mRate=rate/12;
+    var mPay=mRate>0?amt*mRate*Math.pow(1+mRate,months)/(Math.pow(1+mRate,months)-1):amt/months;
+
+    if(levType==='equal-payment'){
+      var startMonth=(yr-1)*12+1;
+      var bal2=amt;
+      for(var m2=1;m2<startMonth;m2++){bal2-=(mPay-bal2*mRate);}
+      for(var m2=0;m2<12&&(startMonth+m2)<=months;m2++){
+        var intM=bal2*mRate;
+        var mDiv=curAmt*curDivYield/12;
+        var mDiff=mDiv-mPay;
+        yearInt+=intM;yearPay+=mPay;
+        var prevBal=bal2;
+        bal2-=(mPay-intM);if(bal2<0)bal2=0;
+        levMonthRows.push({label:(yr)+'년 '+(m2+1)+'월',pay:mPay,div:mDiv,diff:mDiff,bal:bal2,cumDiv:totalDiv-(yearDiv-(m2+1)*mDiv)});
+      }
+      curBal=bal2;
+    } else if(levType==='equal-principal'){
+      var prinPerMonth=amt/months;
+      var startBal=amt-prinPerMonth*(yr-1)*12;
+      for(var m2=0;m2<12;m2++){
+        var b=startBal-prinPerMonth*m2;
+        var intM=b*mRate;
+        var mMonthPay=prinPerMonth+intM;
+        var mDiv=curAmt*curDivYield/12;
+        var mDiff=mDiv-mMonthPay;
+        yearInt+=intM;yearPay+=mMonthPay;
+        levMonthRows.push({label:(yr)+'년 '+(m2+1)+'월',pay:mMonthPay,div:mDiv,diff:mDiff,bal:b-prinPerMonth,cumDiv:0});
+      }
+      curBal=startBal-prinPerMonth*12;if(curBal<0)curBal=0;
+    } else {
+      yearInt=curBal*rate;
+      yearPay=yr===years?curBal+yearInt:yearInt;
+      if(yr===years)curBal=0;
+      for(var m2=0;m2<12;m2++){
+        var mDiv=curAmt*curDivYield/12;
+        var mMonthPay=yr===years&&m2===11?amt+amt*mRate:amt*mRate;
+        levMonthRows.push({label:(yr)+'년 '+(m2+1)+'월',pay:mMonthPay,div:mDiv,diff:mDiv-mMonthPay,bal:yr===years&&m2===11?0:amt,cumDiv:0});
+      }
+    }
+    totalInt+=yearInt;
+
+    // 평가자산 = 투자원금 × (1+주가성장률)^yr - 잔여대출
+    var asset=amt*Math.pow(1+stockGrowth,yr)-curBal;
+    var diff=yearDiv-yearPay;
+    if(breakeven===-1&&totalDiv>=totalInt)breakeven=yr;
+    levRows.push({yr:yr,pay:yearPay,div:yearDiv,diff:diff,bal:curBal,cumDiv:totalDiv,asset:asset});
+  }
+
+  var net=totalDiv-totalInt;
+  var monthlyDiv=amt*divYield/freqMap[levFreq];
+
+  document.getElementById('v-monthly-pay').textContent=f(monthlyPay)+'원';
+  document.getElementById('v-monthly-div').textContent=f(monthlyDiv)+'원/'+freqLabel[levFreq];
+  document.getElementById('v-total-int').textContent=f(totalInt)+'원';
+  document.getElementById('v-total-div').textContent=f(totalDiv)+'원';
+  document.getElementById('v-breakeven').textContent=breakeven>0?breakeven+'년차 (누적배당≥총이자 달성)':'기간 내 미달성';
+  document.getElementById('v-net').textContent=(net>=0?'+':'')+f(net)+'원';
+  document.getElementById('v-net').style.color=net>=0?'#1D9E75':'#D85A30';
+
+  var judge=document.getElementById('v-judge');
+  judge.style.display='block';
+  if(net>0){
+    judge.className='good-box';
+    judge.innerHTML='✅ <strong>이론상 수익 구조</strong> — 총 이자('+f(totalInt)+'원)보다 배당 수령액('+f(totalDiv)+'원)이 많아요. 배당-이자 순수익 약 <strong>'+f(net)+'원</strong>이에요. (세금·수수료 미반영)';
+  } else {
+    judge.className='bad-box';
+    judge.innerHTML='❌ <strong>이론상 손실 구조</strong> — 총 이자('+f(totalInt)+'원)가 배당 수령액('+f(totalDiv)+'원)보다 많아요. 손실 약 <strong>'+f(Math.abs(net))+'원</strong>이에요. 배당수익률을 높이거나 금리를 낮춰보세요.';
+  }
+
+  renderLevTable();
+  toast();
+}
+
+function toast(){
+  var t=document.getElementById('save-toast');
+  t.textContent='💾 계산됐어요';t.classList.add('show');
+  clearTimeout(saveTimer);saveTimer=setTimeout(function(){t.classList.remove('show');t.textContent='💾 입력값이 저장됐어요';},1500);
+}
+
+function currentTab(){return document.getElementById('main-loan').classList.contains('active')?'loan':'lev';}
+
+function clearTab(){
+  var tab=currentTab();
+  var names={loan:'대출 계산기',lev:'레버리지 배당 시뮬레이터'};
+  if(!confirm('['+names[tab]+'] 탭의 입력값을 초기화할까요?'))return;
+  if(tab==='loan'){
+    ['l-amount','l-rate','l-period'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+    ['l-monthly','l-monthly2','l-total','l-interest','l-principal','l-interest-ratio'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent='—';});
+    document.getElementById('l-tbody').innerHTML='<tr class="emp"><td colspan="5">위에 값을 입력하면 상환 내역이 나와요</td></tr>';
+  } else {
+    ['v-amount','v-rate','v-period','v-yield','v-growth','v-stock-growth'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+    ['v-monthly-pay','v-monthly-div','v-total-int','v-total-div','v-breakeven','v-net'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent='—';});
+    document.getElementById('v-judge').style.display='none';
+    levRows=[];levMonthRows=[];renderLevTable();
+  }
+}
+
+function fillExample(){
+  var tab=currentTab();
+  if(tab==='loan'){
+    document.getElementById('l-amount').value='5,000';
+    document.getElementById('l-rate').value='4.5';
+    document.getElementById('l-period').value='10';
+    calcLoan();
+  } else {
+    document.getElementById('v-amount').value='5,000';
+    document.getElementById('v-rate').value='4.5';
+    document.getElementById('v-period').value='10';
+    document.getElementById('v-yield').value='8';
+    document.getElementById('v-growth').value='3';
+    document.getElementById('v-stock-growth').value='3';
+    calcLev();
+  }
+  var t=document.getElementById('save-toast');t.textContent='✏️ 예시값을 채웠어요';t.classList.add('show');
+  clearTimeout(saveTimer);saveTimer=setTimeout(function(){t.classList.remove('show');},2000);
+}
+
+// PDF 저장 - 대출
+function loanPDF(){
+  var date=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
+  var typeLabel={'equal-payment':'원리금균등','equal-principal':'원금균등','bullet':'만기일시'};
+  function gt(id){var e=document.getElementById(id);return e?e.textContent:'—';}
+  var rows=[].slice.call(document.getElementById('l-tbody').querySelectorAll('tr:not(.emp)'));
+  var trs=rows.map(function(r){return '<tr>'+[].slice.call(r.querySelectorAll('td')).map(function(td){return '<td>'+td.textContent+'</td>';}).join('')+'</tr>';}).join('');
+  var w=window.open('','_blank');
+  w.document.write('<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>대출 계산 결과</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,sans-serif;font-size:12px;padding:24px;max-width:700px;margin:0 auto}h1{font-size:16px;font-weight:700;margin-bottom:4px}.dt{font-size:11px;color:#666;margin-bottom:20px}table{width:100%;border-collapse:collapse;margin-bottom:16px}th{background:#f4f4f4;text-align:left;padding:7px 10px;font-size:12px;border-bottom:2px solid #ddd}td{padding:6px 10px;border-bottom:1px solid #eee;font-size:11px}td:last-child{text-align:right}.stit{font-size:13px;font-weight:700;margin:14px 0 8px;border-bottom:1.5px solid #eee;padding-bottom:4px}.pbtn{display:block;margin:16px auto;padding:10px 30px;background:#111;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer}@media print{.pbtn{display:none}}.r{color:#D85A30;font-weight:700}.b{color:#2563EB;font-weight:700}</style></head><body>');
+  w.document.write('<h1>💳 대출 계산 결과</h1><div class="dt">출력일: '+date+'</div>');
+  w.document.write('<button class="pbtn" onclick="window.print()">🖨️ PDF / 인쇄</button>');
+  w.document.write('<div class="stit">입력 정보</div>');
+  w.document.write('<table><tr><th>항목</th><th>값</th></tr><tr><td>대출 원금</td><td>'+gt('l-principal')+'</td></tr><tr><td>상환 방법</td><td>'+typeLabel[loanType]+'</td></tr><tr><td>월 납부액 (첫달)</td><td class="b">'+gt('l-monthly')+'</td></tr><tr><td>총 납부액</td><td class="r">'+gt('l-total')+'</td></tr><tr><td>총 이자</td><td class="r">'+gt('l-interest')+'</td></tr><tr><td>이자 비율</td><td class="r">'+gt('l-interest-ratio')+'</td></tr></table>');
+  w.document.write('<div class="stit">월별 상환 내역</div><table><thead><tr><th>회차</th><th>납부액</th><th>원금</th><th>이자</th><th>잔여원금</th></tr></thead><tbody>'+trs+'</tbody></table>');
+  w.document.write('<button class="pbtn" onclick="window.print()">🖨️ PDF / 인쇄</button></body></html>');
+  w.document.close();
+}
+
+// PDF 저장 - 레버리지
+function levPDF(){
+  var date=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
+  var typeLabel={'equal-payment':'원리금균등','equal-principal':'원금균등','bullet':'만기일시'};
+  var freqLabel={w:'주배당',m:'월배당',q:'분기배당',y:'연배당'};
+  function gt(id){var e=document.getElementById(id);return e?e.textContent:'—';}
+  var rows=[].slice.call(document.getElementById('v-tbody').querySelectorAll('tr:not(.emp)'));
+  var trs=rows.map(function(r){return '<tr>'+[].slice.call(r.querySelectorAll('td')).map(function(td,i){return '<td'+(i===3?(parseFloat(td.textContent.replace(/,/g,''))>=0?' style="color:#1D9E75"':' style="color:#D85A30"'):'')+'>'+td.textContent+'</td>';}).join('')+'</tr>';}).join('');
+  var judge=document.getElementById('v-judge');
+  var w=window.open('','_blank');
+  w.document.write('<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>레버리지 배당 시뮬레이션</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,sans-serif;font-size:12px;padding:24px;max-width:700px;margin:0 auto}h1{font-size:16px;font-weight:700;margin-bottom:4px}.dt{font-size:11px;color:#666;margin-bottom:20px}table{width:100%;border-collapse:collapse;margin-bottom:16px}th{background:#f4f4f4;text-align:left;padding:7px 10px;font-size:12px;border-bottom:2px solid #ddd}td{padding:6px 10px;border-bottom:1px solid #eee;font-size:11px}.stit{font-size:13px;font-weight:700;margin:14px 0 8px;border-bottom:1.5px solid #eee;padding-bottom:4px}.pbtn{display:block;margin:16px auto;padding:10px 30px;background:#111;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer}@media print{.pbtn{display:none}}.warn{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 12px;font-size:11px;margin-bottom:12px;line-height:1.7}.judge{border-radius:6px;padding:8px 12px;font-size:11px;margin-bottom:12px;line-height:1.7}.g{color:#1D9E75;font-weight:700}.r{color:#D85A30;font-weight:700}.b{color:#2563EB;font-weight:700}.p{color:#7C3AED;font-weight:700}</style></head><body>');
+  w.document.write('<h1>📈 레버리지 배당 시뮬레이션 결과</h1><div class="dt">출력일: '+date+'</div>');
+  w.document.write('<button class="pbtn" onclick="window.print()">🖨️ PDF / 인쇄</button>');
+  w.document.write('<div class="warn">⚠️ 이론상 시뮬레이션입니다. 실제 투자는 주가 변동·배당 삭감·금리 변동 등 다양한 리스크가 있어요. 참고용으로만 활용하세요.</div>');
+  if(judge&&judge.style.display!=='none')w.document.write('<div class="judge" style="background:'+(judge.className==='good-box'?'#f0fdf4':'#fff1f2')+';border:1px solid '+(judge.className==='good-box'?'#bbf7d0':'#fecdd3')+'">'+judge.innerHTML+'</div>');
+  w.document.write('<div class="stit">시뮬레이션 조건</div>');
+  w.document.write('<table><tr><th>항목</th><th>값</th></tr><tr><td>상환방법</td><td>'+typeLabel[levType]+'</td></tr><tr><td>배당 주기</td><td>'+freqLabel[levFreq]+'</td></tr><tr><td>배당 재투자</td><td>'+(levReinvest?'재투자':'재투자 안함')+'</td></tr><tr><td>월 대출 상환액</td><td class="r">'+gt('v-monthly-pay')+'</td></tr><tr><td>1년차 배당수령</td><td class="g">'+gt('v-monthly-div')+'</td></tr><tr><td>총 대출 이자</td><td class="r">'+gt('v-total-int')+'</td></tr><tr><td>총 배당 수령액</td><td class="g">'+gt('v-total-div')+'</td></tr><tr><td>손익분기 시점</td><td class="b">'+gt('v-breakeven')+'</td></tr><tr><td>만기 후 순수익</td><td class="p">'+gt('v-net')+'</td></tr></table>');
+  w.document.write('<div class="stit">연도별 상세 내역</div><table><thead><tr><th>연도</th><th>연간상환</th><th>연간배당</th><th>배당-이자</th><th>잔여대출</th><th>누적배당</th></tr></thead><tbody>'+trs+'</tbody></table>');
+  w.document.write('<button class="pbtn" onclick="window.print()">🖨️ PDF / 인쇄</button></body></html>');
+  w.document.close();
+}
+
+</script>
+</body>
+</html>
